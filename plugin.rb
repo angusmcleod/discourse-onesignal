@@ -10,6 +10,8 @@ after_initialize do
 
     DiscourseEvent.on(:post_notification_alert) do |user, payload|
 
+      puts "HERE IS THE TRIGGER: #{user.inspect}; #{payload.inspect}"
+
       if SiteSetting.onesignal_app_id.nil? || SiteSetting.onesignal_app_id.empty?
           Rails.logger.warn('OneSignal App ID is missing')
           return
@@ -23,6 +25,8 @@ after_initialize do
           .where("('push' = ANY(scopes) OR 'notifications' = ANY(scopes)) AND push_url IS NOT NULL AND position(push_url in ?) > 0 AND revoked_at IS NULL",
                     ONESIGNALAPI)
           .pluck(:client_id, :push_url)
+
+      puts "HERE ARE THE CLIENTS: #{clients.inspect}"
 
       if clients.length > 0
         Jobs.enqueue(:onesignal_pushnotification, clients: clients, payload: payload, username: user.username)
@@ -55,6 +59,7 @@ after_initialize do
               'Content-Type'  => 'application/json;charset=utf-8',
               'Authorization' => "Basic #{SiteSetting.onesignal_rest_api_key}")
           request.body = params.as_json.to_json
+          puts "HERE IS THE FULL REQUEST: #{request.inspect}"
           response = http.request(request)
 
           case response
