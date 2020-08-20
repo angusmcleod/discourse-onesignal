@@ -31,7 +31,7 @@ after_initialize do
     end
 
     module ::Jobs
-      class OnesignalPushnotification < Jobs::Base
+      class OnesignalPushnotification < ::Jobs::Base
         def execute(args)
           payload = args["payload"]
 
