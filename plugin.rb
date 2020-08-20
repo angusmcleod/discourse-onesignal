@@ -9,6 +9,8 @@ after_initialize do
     ONESIGNALAPI = 'https://onesignal.com/api/v1/notifications'
 
     DiscourseEvent.on(:post_notification_alert) do |user, payload|
+      
+      puts "Running event: #{user.inspect}; #{payload.inspect}"
 
       if SiteSetting.onesignal_app_id.nil? || SiteSetting.onesignal_app_id.empty?
           Rails.logger.warn('OneSignal App ID is missing')
@@ -25,6 +27,7 @@ after_initialize do
           .pluck(:client_id, :push_url)
 
       if clients.length > 0
+        puts "Enqueuing job"
         Jobs.enqueue(:onesignal_pushnotification, clients: clients, payload: payload, username: user.username)
       end
 
@@ -56,6 +59,8 @@ after_initialize do
               'Authorization' => "Basic #{SiteSetting.onesignal_rest_api_key}")
           request.body = params.as_json.to_json
           response = http.request(request)
+          
+          puts "Response: #{response.inspect}"
 
           case response
           when Net::HTTPSuccess then
